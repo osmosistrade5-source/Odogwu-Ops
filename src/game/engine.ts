@@ -12,6 +12,7 @@ import { PIDGIN_CALLOUTS } from './constants.ts';
 import { RemotePlayerData } from './multiplayer.ts';
 import { LagosCityBuilder } from './cityBuilder.ts';
 import { buildTacticalOperativeMesh, buildFirstPersonTacticalArms } from './characterModels.ts';
+import { LagosCrowdSystem } from './crowdSystem.ts';
 
 // High-fidelity mature visual textures
 const SKYBOX_TEXTURE = '/src/assets/images/lagos_mature_skyline_1791370806876.jpg';
@@ -79,6 +80,7 @@ export class LagosStreetEngine {
   private particles: { mesh: THREE.Mesh; vel: THREE.Vector3; life: number }[] = [];
   private shellCasings: { mesh: THREE.Mesh; vel: THREE.Vector3; rotVel: THREE.Vector3; life: number }[] = [];
   private atmosphericDust: THREE.Points | null = null;
+  public crowdSystem!: LagosCrowdSystem;
 
   // Multiplayer Remote Players
   private remotePlayerMeshes: Map<string, THREE.Group> = new Map();
@@ -108,6 +110,9 @@ export class LagosStreetEngine {
     this.setupCityBots();
     this.setupNavMarker();
     this.setupAtmosphericParticles();
+    this.crowdSystem = new LagosCrowdSystem(this.scene, (speaker, text) => {
+      this.callbacks.onBotDialogue(speaker, text);
+    });
     this.setupInputListeners();
     this.setupWebXR();
 
@@ -901,6 +906,9 @@ export class LagosStreetEngine {
     this.updatePlayerMovement(delta);
     this.updateWeaponSway(delta);
     this.updateBots(delta);
+    if (this.crowdSystem) {
+      this.crowdSystem.update(delta, this.playerPosition);
+    }
     this.updateParticles(delta);
     this.updateShellCasings(delta);
     this.checkDistrictNotification();
@@ -1125,6 +1133,16 @@ export class LagosStreetEngine {
 
   public getBots(): BotAgent[] {
     return this.bots;
+  }
+
+  public getCivilians(): { name: string; role: string; x: number; z: number }[] {
+    if (!this.crowdSystem) return [];
+    return this.crowdSystem.civilians.map((c) => ({
+      name: c.name,
+      role: c.role,
+      x: c.position.x,
+      z: c.position.z,
+    }));
   }
 
   private onWindowResize = () => {

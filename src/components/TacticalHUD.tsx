@@ -47,6 +47,7 @@ interface TacticalHUDProps {
   onJoystickMove: (input: { forward: number; right: number }) => void;
   onlinePlayerCount: number;
   radarEnemies: { x: number; z: number }[];
+  radarCivilians?: { x: number; z: number }[];
 }
 
 export const TacticalHUD: React.FC<TacticalHUDProps> = ({
@@ -76,6 +77,7 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
   onJoystickMove,
   onlinePlayerCount,
   radarEnemies,
+  radarCivilians = [],
 }) => {
   const currentSlot = inventory.selectedSlot;
   const currentWeapon = inventory.weapons[currentSlot];
@@ -132,13 +134,26 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
             <span className="absolute top-1 text-[9px] font-mono font-bold text-amber-400">N</span>
             <div className="w-2.5 h-2.5 bg-amber-400 rotate-45 transform shadow-sm" />
 
-            {/* Radar Enemy Blips */}
+            {/* Radar Civilian Blips (Green dots) */}
+            {radarCivilians.map((c, idx) => {
+              const px = Math.max(-42, Math.min(42, (c.x / 120) * 40));
+              const py = Math.max(-42, Math.min(42, (c.z / 120) * 40));
+              return (
+                <div
+                  key={`civ-${idx}`}
+                  className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400 opacity-80"
+                  style={{ transform: `translate(${px}px, ${py}px)` }}
+                />
+              );
+            })}
+
+            {/* Radar Hostile Blips (Red dots) */}
             {radarEnemies.map((e, idx) => {
               const px = Math.max(-42, Math.min(42, (e.x / 120) * 40));
               const py = Math.max(-42, Math.min(42, (e.z / 120) * 40));
               return (
                 <div
-                  key={idx}
+                  key={`enemy-${idx}`}
                   className="absolute w-2 h-2 rounded-full bg-red-500 ring-2 ring-red-400/50"
                   style={{ transform: `translate(${px}px, ${py}px)` }}
                 />
@@ -218,8 +233,13 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
           >
             <MapPin className="w-3.5 h-3.5 text-amber-400" />
             <div className="text-left">
-              <div className="text-[9px] font-mono text-stone-500 uppercase tracking-widest">
-                LAGOS METROPOLIS
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] font-mono text-stone-500 uppercase tracking-widest">
+                  LAGOS METROPOLIS
+                </span>
+                <span className="text-[8px] font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1 py-0.2 rounded">
+                  ● {radarCivilians.length > 0 ? radarCivilians.length : 35} LAGOSIANS
+                </span>
               </div>
               <div className="text-xs font-heading font-black text-stone-200 group-hover:text-amber-300 uppercase tracking-wide">
                 {currentDistrict}

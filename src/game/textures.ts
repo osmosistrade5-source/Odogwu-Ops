@@ -794,6 +794,127 @@ class ProceduralTextureCache {
     this.cache.set(key, tex);
     return tex;
   }
+
+  /**
+   * Vibrant Nigerian Ankara Wax-Print Fabric Texture
+   */
+  public getAnkaraWaxTexture(variant: 'gold_teal' | 'red_orange' | 'blue_yellow' = 'gold_teal'): THREE.CanvasTexture {
+    const key = `ankara_wax_${variant}`;
+    if (this.cache.has(key)) return this.cache.get(key)!;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d')!;
+
+    const palettes = {
+      gold_teal: { base: '#d97706', accent1: '#0d9488', accent2: '#1e1b4b' },
+      red_orange: { base: '#dc2626', accent1: '#ea580c', accent2: '#fef08a' },
+      blue_yellow: { base: '#1d4ed8', accent1: '#eab308', accent2: '#166534' },
+    };
+    const p = palettes[variant];
+
+    ctx.fillStyle = p.base;
+    ctx.fillRect(0, 0, 512, 512);
+
+    // Traditional circular eye & fan motifs
+    const step = 64;
+    for (let x = 0; x <= 512; x += step) {
+      for (let y = 0; y <= 512; y += step) {
+        ctx.fillStyle = p.accent1;
+        ctx.beginPath();
+        ctx.arc(x, y, 22, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = p.accent2;
+        ctx.beginPath();
+        ctx.arc(x, y, 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, 26, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    this.cache.set(key, tex);
+    return tex;
+  }
+
+  /**
+   * Lagos Casual Streetwear Graphic Tee
+   */
+  public getStreetwearTeeTexture(label: string = 'LAGOS', baseColor: string = '#18181b'): THREE.CanvasTexture {
+    const key = `tee_${label}_${baseColor}`;
+    if (this.cache.has(key)) return this.cache.get(key)!;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    ctx.fillStyle = baseColor;
+    ctx.fillRect(0, 0, 256, 256);
+
+    // Graphic print on chest
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = '900 32px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, 128, 110);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText('CENTRE OF EXCELLENCE', 128, 140);
+
+    const tex = new THREE.CanvasTexture(canvas);
+    this.cache.set(key, tex);
+    return tex;
+  }
+
+  /**
+   * Traditional Nigerian Agbada Embroidered Neckline
+   */
+  public getAgbadaEmbroideryTexture(): THREE.CanvasTexture {
+    const key = 'agbada_embroidery';
+    if (this.cache.has(key)) return this.cache.get(key)!;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d')!;
+
+    // Rich cream brocade fabric base
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, 512, 512);
+
+    // Intricate gold geometric embroidery around chest & neckline
+    ctx.strokeStyle = '#b45309';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(128, 60, 256, 320);
+
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(144, 76, 224, 288);
+
+    // Traditional filigree diamond knot in center
+    ctx.fillStyle = '#ca8a04';
+    ctx.beginPath();
+    ctx.moveTo(256, 120);
+    ctx.lineTo(320, 220);
+    ctx.lineTo(256, 320);
+    ctx.lineTo(192, 220);
+    ctx.closePath();
+    ctx.fill();
+
+    const tex = new THREE.CanvasTexture(canvas);
+    this.cache.set(key, tex);
+    return tex;
+  }
 }
 
 export const textureCache = new ProceduralTextureCache();

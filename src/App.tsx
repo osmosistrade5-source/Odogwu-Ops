@@ -67,6 +67,7 @@ export default function App() {
   const [killfeed, setKillfeed] = useState<KillfeedEntry[]>([]);
   const [announcement, setAnnouncement] = useState<string | null>(null);
   const [radarEnemies, setRadarEnemies] = useState<{ x: number; z: number }[]>([]);
+  const [radarCivilians, setRadarCivilians] = useState<{ x: number; z: number }[]>([]);
 
   // Multiplayer State
   const [onlinePlayers, setOnlinePlayers] = useState<RemotePlayerData[]>([]);
@@ -223,6 +224,9 @@ export default function App() {
           .filter((b) => b.team === 'ENEMY' && b.state !== 'DEAD')
           .map((b) => ({ x: b.position.x, z: b.position.z }));
         setRadarEnemies(coords);
+
+        const civs = engineRef.current.getCivilians();
+        setRadarCivilians(civs.map((c) => ({ x: c.x, z: c.z })));
 
         setPlayerPositionCoords({
           x: Math.round(engineRef.current.playerPosition.x),
@@ -489,6 +493,7 @@ export default function App() {
         onJoystickMove={handleJoystickMove}
         onlinePlayerCount={onlinePlayers.length}
         radarEnemies={radarEnemies}
+        radarCivilians={radarCivilians}
       />
 
       {/* Floating Controls Helper Hint */}
