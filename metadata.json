@@ -1,0 +1,6 @@
+{
+  "name": "ODOGWU OPS: Lagos Street VR - Sims Tactical",
+  "description": "An immersive Nigerian street VR tactical simulation blending The Sims life management with Call of Duty Mobile tactical combat, set in vibrant Lagos with stylized graphics inspired by monkeypost.xyz.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

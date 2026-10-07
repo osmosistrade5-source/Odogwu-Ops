@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  h1, h2, h3, h4, .font-heading {
+    font-family: 'Chakra Petch', sans-serif;
+  }
+}
+
+@keyframes hitmarker-flash {
+  0% { transform: scale(1.4) rotate(45deg); opacity: 1; }
+  100% { transform: scale(1) rotate(45deg); opacity: 0; }
+}
+
+.hitmarker-animate {
+  animation: hitmarker-flash 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.9; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.danfo-stripe {
+  background: repeating-linear-gradient(
+    90deg,
+    #000000 0px,
+    #000000 16px,
+    #ffd000 16px,
+    #ffd000 32px
+  );
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.4);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.7);
+}
