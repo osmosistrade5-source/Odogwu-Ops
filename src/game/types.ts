@@ -58,6 +58,10 @@ export interface PlayerSimsProfile {
     suyaAdrenaline: boolean;
     bulletproofAnkara: boolean;
   };
+  specialistId?: string;
+  avatarUrl?: string;
+  headgearType?: 'helmet' | 'beret' | 'boonie' | 'balaclava' | 'fade';
+  gender?: 'male' | 'female';
 }
 
 export interface BotAgent {

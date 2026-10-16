@@ -915,7 +915,86 @@ class ProceduralTextureCache {
     this.cache.set(key, tex);
     return tex;
   }
+
+  /**
+   * Ambient Occlusion Contact Shadow Texture for Characters & Vehicles
+   * Smooth radial gradient disc to ground models firmly to pavement
+   */
+  public getContactShadowTexture(): THREE.CanvasTexture {
+    const key = 'contact_shadow_disc';
+    if (this.cache.has(key)) return this.cache.get(key)!;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    const grad = ctx.createRadialGradient(128, 128, 10, 128, 128, 120);
+    grad.addColorStop(0, 'rgba(0, 0, 0, 0.75)');
+    grad.addColorStop(0.4, 'rgba(0, 0, 0, 0.45)');
+    grad.addColorStop(0.8, 'rgba(0, 0, 0, 0.12)');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(128, 128, 120, 0, Math.PI * 2);
+    ctx.fill();
+
+    const tex = new THREE.CanvasTexture(canvas);
+    this.cache.set(key, tex);
+    return tex;
+  }
+
+  /**
+   * Metallic Gold Nigerian Military Eagle Badge for Tactical Beret
+   */
+  public getBeretBadgeTexture(): THREE.CanvasTexture {
+    const key = 'beret_badge';
+    if (this.cache.has(key)) return this.cache.get(key)!;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d')!;
+
+    // Dark shield backdrop
+    ctx.fillStyle = '#14532d'; // Deep army green
+    ctx.beginPath();
+    ctx.arc(64, 64, 56, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#ca8a04'; // Gold rim
+    ctx.lineWidth = 6;
+    ctx.stroke();
+
+    // Golden eagle spread wings
+    ctx.fillStyle = '#fef08a';
+    ctx.beginPath();
+    ctx.moveTo(64, 30);
+    ctx.lineTo(95, 55);
+    ctx.lineTo(80, 75);
+    ctx.lineTo(64, 60);
+    ctx.lineTo(48, 75);
+    ctx.lineTo(33, 55);
+    ctx.closePath();
+    ctx.fill();
+
+    // Crossed rifles in gold
+    ctx.strokeStyle = '#eab308';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(35, 95);
+    ctx.lineTo(93, 40);
+    ctx.moveTo(93, 95);
+    ctx.lineTo(35, 40);
+    ctx.stroke();
+
+    const tex = new THREE.CanvasTexture(canvas);
+    this.cache.set(key, tex);
+    return tex;
+  }
 }
 
 export const textureCache = new ProceduralTextureCache();
+
 

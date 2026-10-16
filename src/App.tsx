@@ -437,6 +437,34 @@ export default function App() {
     showAnnouncementBanner(`Equipped ${value}! Street Cred +10`);
   };
 
+  const handleSelectSpecialist = (spec: {
+    id: string;
+    role: string;
+    callsign: string;
+    image: string;
+    headgear: 'helmet' | 'beret' | 'boonie' | 'balaclava';
+    gender: 'male' | 'female';
+  }) => {
+    setProfile((p) => ({
+      ...p,
+      specialistId: spec.id,
+      alias: spec.callsign,
+      title: spec.role,
+      avatarUrl: spec.image,
+      headgearType: spec.headgear,
+      gender: spec.gender,
+    }));
+
+    if (engineRef.current) {
+      engineRef.current.updatePlayerOperative({
+        headgear: spec.headgear,
+        gender: spec.gender,
+      });
+    }
+
+    showAnnouncementBanner(`🎖️ OPERATIVE DEPLOYED: ${spec.callsign} (${spec.role.toUpperCase()})`);
+  };
+
   const handleSelectMode = (mode: GameMode) => {
     setGameMode(mode);
     if (engineRef.current) {
@@ -520,6 +548,7 @@ export default function App() {
         isOpen={showWardrobe}
         onClose={() => setShowWardrobe(false)}
         onSelectOutfit={handleSelectOutfit}
+        onSelectSpecialist={handleSelectSpecialist}
       />
 
       <QuestModal

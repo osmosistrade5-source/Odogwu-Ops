@@ -150,6 +150,10 @@ export const INITIAL_PROFILE: PlayerSimsProfile = {
     suyaAdrenaline: false,
     bulletproofAnkara: false,
   },
+  specialistId: 'Odogwu Alpha',
+  avatarUrl: '/src/assets/images/realistic_nigerian_operative_1791372075310.jpg',
+  headgearType: 'helmet',
+  gender: 'male',
 };
 
 export const INITIAL_QUESTS: Quest[] = [

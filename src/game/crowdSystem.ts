@@ -316,14 +316,34 @@ export class LagosCrowdSystem {
     });
   }
 
-  // --- 2. CREATE STYLIZED ARTICULATED NIGERIAN CIVILIAN 3D MESH ---
+  // --- 2. CREATE REALISTIC ARTICULATED NIGERIAN CIVILIAN 3D MESH ---
   private createCivilianMesh(role: CivilianRole, seed: number): THREE.Group {
     const grp = new THREE.Group();
 
-    // Natural skin material with expressive facial features
-    const faceTex = textureCache.getTacticalFaceTexture(false);
-    const faceMat = new THREE.MeshStandardMaterial({ map: faceTex, roughness: 0.65 });
-    const skinMat = new THREE.MeshStandardMaterial({ color: 0x3d2314, roughness: 0.75 });
+    // Natural skin material with expressive tone
+    const skinMat = new THREE.MeshStandardMaterial({
+      color: 0x3d2314, // Rich natural melanin tone
+      roughness: 0.72,
+    });
+    const lipMat = new THREE.MeshStandardMaterial({ color: 0x5a2d1d, roughness: 0.6 });
+    const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xf5f0eb, roughness: 0.1 });
+    const eyeIrisMat = new THREE.MeshStandardMaterial({ color: 0x2b1509, roughness: 0.2 });
+    const hairMat = new THREE.MeshStandardMaterial({ color: 0x120c08, roughness: 0.9 });
+    const shoeMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.6 }); // Black / navy sneakers
+    const soleMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }); // White rubber soles
+
+    // Ground Contact Shadow Disc
+    const shadowGeo = new THREE.PlaneGeometry(1.0, 1.0);
+    const shadowMat = new THREE.MeshBasicMaterial({
+      map: textureCache.getContactShadowTexture(),
+      transparent: true,
+      opacity: 0.8,
+      depthWrite: false,
+    });
+    const contactShadow = new THREE.Mesh(shadowGeo, shadowMat);
+    contactShadow.rotation.x = -Math.PI / 2;
+    contactShadow.position.y = 0.02;
+    grp.add(contactShadow);
 
     // Clothing Material based on role
     let torsoMat: THREE.Material;
@@ -334,11 +354,16 @@ export class LagosCrowdSystem {
         map: textureCache.getAnkaraWaxTexture(seed % 2 === 0 ? 'gold_teal' : 'red_orange'),
         roughness: 0.7,
       });
+      pantsMat = new THREE.MeshStandardMaterial({
+        map: textureCache.getAnkaraWaxTexture(seed % 2 === 0 ? 'gold_teal' : 'red_orange'),
+        roughness: 0.75,
+      });
     } else if (role === 'AGBADA_CHIEF') {
       torsoMat = new THREE.MeshStandardMaterial({
         map: textureCache.getAgbadaEmbroideryTexture(),
         roughness: 0.6,
       });
+      pantsMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.7 }); // Matching pristine white trousers
     } else if (role === 'HAWKER' || role === 'CONDUCTOR') {
       torsoMat = new THREE.MeshStandardMaterial({
         map: textureCache.getStreetwearTeeTexture('DANFO #1', '#ca8a04'),
@@ -362,40 +387,119 @@ export class LagosCrowdSystem {
     torso.castShadow = true;
     grp.add(torso);
 
-    // Head with Realistic Face Map
-    const headGeo = new THREE.SphereGeometry(0.18, 18, 16);
-    const head = new THREE.Mesh(headGeo, faceMat);
-    head.position.y = 1.74;
-    head.rotation.y = -Math.PI / 2;
-    head.castShadow = true;
-    grp.add(head);
+    // Neck
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.09, 0.14, 10), skinMat);
+    neck.position.y = 1.58;
+    grp.add(neck);
+
+    // Anatomical Head Group
+    const headGroup = new THREE.Group();
+    headGroup.position.y = 1.74;
+
+    // Cranium
+    const cranium = new THREE.Mesh(new THREE.SphereGeometry(0.17, 18, 14), skinMat);
+    cranium.scale.set(0.96, 1.04, 1.02);
+    cranium.castShadow = true;
+    headGroup.add(cranium);
+
+    // Sculpted Jaw and Chin
+    const jaw = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.09, 0.12, 10), skinMat);
+    jaw.position.set(0, -0.05, 0.04);
+    headGroup.add(jaw);
+
+    // 3D Sculpted Nose
+    const nose = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.07, 0.05), skinMat);
+    nose.position.set(0, 0, 0.175);
+    headGroup.add(nose);
+
+    // 3D Lips
+    const lips = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.028, 0.03), lipMat);
+    lips.position.set(0, -0.06, 0.155);
+    headGroup.add(lips);
+
+    // 3D Eyes
+    [-0.055, 0.055].forEach((ex) => {
+      const eyeWhite = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 8), eyeWhiteMat);
+      eyeWhite.position.set(ex, 0.028, 0.15);
+      headGroup.add(eyeWhite);
+
+      const iris = new THREE.Mesh(new THREE.CircleGeometry(0.011, 8), eyeIrisMat);
+      iris.position.set(ex, 0.028, 0.172);
+      headGroup.add(iris);
+    });
+
+    // 3D Ears
+    [-0.17, 0.17].forEach((earX) => {
+      const ear = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.06, 0.035), skinMat);
+      ear.position.set(earX, 0, 0);
+      headGroup.add(ear);
+    });
+
+    // Haircut / Fade
+    if (role !== 'MARKET_MAMA') {
+      const hair = new THREE.Mesh(
+        new THREE.SphereGeometry(0.175, 16, 12, 0, Math.PI * 2, 0, Math.PI / 1.7),
+        hairMat
+      );
+      hair.position.y = 0.02;
+      headGroup.add(hair);
+    }
 
     // Traditional Yoruba Fila Cap for Agbada Chief
     if (role === 'AGBADA_CHIEF') {
       const cap = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.2, 0.19, 0.22, 12),
+        new THREE.CylinderGeometry(0.19, 0.18, 0.18, 12),
         new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.5 }) // Velvet wine Fila
       );
-      cap.position.set(0, 1.88, 0.02);
-      cap.rotation.z = -0.2; // tilted fashionably
-      grp.add(cap);
+      cap.position.set(0.02, 0.14, 0.01);
+      cap.rotation.z = -0.22; // tilted fashionably
+      headGroup.add(cap);
+
+      // Gold necklace beads
+      const beads = new THREE.Mesh(
+        new THREE.TorusGeometry(0.14, 0.015, 6, 16),
+        new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.3, metalness: 0.8 })
+      );
+      beads.position.set(0, -0.16, 0.08);
+      headGroup.add(beads);
     } else if (role === 'MARKET_MAMA') {
-      // Gele Head-Tie Crown
-      const gele = new THREE.Mesh(
-        new THREE.TorusGeometry(0.22, 0.08, 8, 16),
+      // Intricate Ankara Gele Head-Tie Crown with folded fan layers
+      const geleCrown = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.24, 0.20, 0.16, 14),
+        new THREE.MeshStandardMaterial({
+          map: textureCache.getAnkaraWaxTexture(seed % 2 === 0 ? 'gold_teal' : 'red_orange'),
+          roughness: 0.65,
+        })
+      );
+      geleCrown.position.y = 0.15;
+      headGroup.add(geleCrown);
+
+      // Folded pleat flare on top
+      const geleFlare = new THREE.Mesh(
+        new THREE.TorusGeometry(0.22, 0.07, 8, 16),
         new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.6 })
       );
-      gele.position.y = 1.86;
-      gele.rotation.x = Math.PI / 2.3;
-      grp.add(gele);
+      geleFlare.position.y = 0.2;
+      geleFlare.rotation.x = Math.PI / 2.5;
+      headGroup.add(geleFlare);
+
+      // Gold hoop earrings
+      [-0.175, 0.175].forEach((gx) => {
+        const earring = new THREE.Mesh(
+          new THREE.TorusGeometry(0.025, 0.006, 6, 12),
+          new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.2, metalness: 0.9 })
+        );
+        earring.position.set(gx, -0.04, 0);
+        headGroup.add(earring);
+      });
     } else if (role === 'HAWKER') {
       // Wide circular woven head-tray balanced on head
       const tray = new THREE.Mesh(
         new THREE.CylinderGeometry(0.42, 0.38, 0.08, 16),
         new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.9 })
       );
-      tray.position.y = 1.96;
-      grp.add(tray);
+      tray.position.y = 0.24;
+      headGroup.add(tray);
 
       // Snacks & Cold drinks inside tray (Gala & Malt bottles)
       const snackColors = [0xd97706, 0x15803d, 0xdc2626, 0x1d4ed8];
@@ -405,18 +509,28 @@ export class LagosCrowdSystem {
           new THREE.MeshStandardMaterial({ color: snackColors[s % snackColors.length] })
         );
         const a = (s / 6) * Math.PI * 2;
-        item.position.set(Math.cos(a) * 0.22, 2.06, Math.sin(a) * 0.22);
-        grp.add(item);
+        item.position.set(Math.cos(a) * 0.22, 0.34, Math.sin(a) * 0.22);
+        headGroup.add(item);
       }
     } else if (role === 'CONDUCTOR') {
       // Yellow Conductor Cap
       const cap = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.19, 0.2, 0.12, 12),
+        new THREE.CylinderGeometry(0.18, 0.19, 0.10, 12),
         new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.6 })
       );
-      cap.position.y = 1.84;
-      grp.add(cap);
+      cap.position.y = 0.12;
+      headGroup.add(cap);
+    } else {
+      // Trendy Sunglasses for young Lagosians
+      const shades = new THREE.Mesh(
+        new THREE.BoxGeometry(0.20, 0.038, 0.04),
+        new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.1, metalness: 0.9 })
+      );
+      shades.position.set(0, 0.03, 0.17);
+      headGroup.add(shades);
     }
+
+    grp.add(headGroup);
 
     // Articulated Left & Right Arms for walk cycles & gesturing
     const armGeo = new THREE.CylinderGeometry(0.065, 0.055, 0.58, 8);
@@ -424,11 +538,13 @@ export class LagosCrowdSystem {
     const armL = new THREE.Mesh(armGeo, skinMat);
     armL.position.set(-0.29, 1.3, 0);
     armL.name = 'armL';
+    armL.castShadow = true;
     grp.add(armL);
 
     const armR = new THREE.Mesh(armGeo, skinMat);
     armR.position.set(0.29, 1.3, 0);
     armR.name = 'armR';
+    armR.castShadow = true;
 
     // Conductor waving arm up
     if (role === 'CONDUCTOR') {
@@ -437,19 +553,47 @@ export class LagosCrowdSystem {
     }
     grp.add(armR);
 
-    // Left & Right Legs for walk cycles
-    const legGeo = new THREE.CylinderGeometry(0.09, 0.075, 0.72, 8);
+    // Left & Right Legs with Streetwear Sneakers
+    const legGeo = new THREE.CylinderGeometry(0.09, 0.075, 0.64, 8);
 
-    const legL = new THREE.Mesh(legGeo, pantsMat);
-    legL.position.set(-0.14, 0.38, 0);
+    const legL = new THREE.Group();
+    legL.position.set(-0.14, 0.42, 0);
     legL.name = 'legL';
-    legL.castShadow = true;
+
+    const thighL = new THREE.Mesh(legGeo, pantsMat);
+    thighL.castShadow = true;
+    legL.add(thighL);
+
+    // Sneaker
+    const shoeL = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.10, 0.18), shoeMat);
+    shoeL.position.set(0, -0.34, 0.03);
+    shoeL.castShadow = true;
+    legL.add(shoeL);
+
+    const soleL = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.03, 0.20), soleMat);
+    soleL.position.set(0, -0.39, 0.03);
+    legL.add(soleL);
+
     grp.add(legL);
 
-    const legR = new THREE.Mesh(legGeo, pantsMat);
-    legR.position.set(0.14, 0.38, 0);
+    const legR = new THREE.Group();
+    legR.position.set(0.14, 0.42, 0);
     legR.name = 'legR';
-    legR.castShadow = true;
+
+    const thighR = new THREE.Mesh(legGeo, pantsMat);
+    thighR.castShadow = true;
+    legR.add(thighR);
+
+    // Sneaker
+    const shoeR = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.10, 0.18), shoeMat);
+    shoeR.position.set(0, -0.34, 0.03);
+    shoeR.castShadow = true;
+    legR.add(shoeR);
+
+    const soleR = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.03, 0.20), soleMat);
+    soleR.position.set(0, -0.39, 0.03);
+    legR.add(soleR);
+
     grp.add(legR);
 
     return grp;

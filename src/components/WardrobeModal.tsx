@@ -3,14 +3,29 @@ import { X, Sparkles, Check, Shield, User, Award } from 'lucide-react';
 import { PlayerSimsProfile } from '../game/types.ts';
 import { soundEngine } from '../game/audio.ts';
 
-const REALISTIC_PORTRAIT = '/src/assets/images/realistic_nigerian_operative_1791372075310.jpg';
-const REALISTIC_FULLBODY = '/src/assets/images/realistic_operative_fullbody_1791372092064.jpg';
+const SPECIALIST_ODOGWU = '/src/assets/images/realistic_nigerian_operative_1791372075310.jpg';
+const SPECIALIST_AMAKA = '/src/assets/images/realistic_female_operative_1792162678104.jpg';
+const SPECIALIST_DANLADI = '/src/assets/images/realistic_recon_operative_1792162691882.jpg';
+const SPECIALIST_VANGUARD = '/src/assets/images/realistic_operative_fullbody_1791372092064.jpg';
+
+interface SpecialistInfo {
+  id: string;
+  role: string;
+  callsign: string;
+  description: string;
+  credReq: number;
+  image: string;
+  headgear: 'helmet' | 'beret' | 'boonie' | 'balaclava';
+  gender: 'male' | 'female';
+  perk: string;
+}
 
 interface WardrobeModalProps {
   profile: PlayerSimsProfile;
   isOpen: boolean;
   onClose: () => void;
   onSelectOutfit: (category: keyof PlayerSimsProfile['outfit'], value: string) => void;
+  onSelectSpecialist?: (spec: SpecialistInfo) => void;
 }
 
 export const WardrobeModal: React.FC<WardrobeModalProps> = ({
@@ -18,38 +33,67 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
   isOpen,
   onClose,
   onSelectOutfit,
+  onSelectSpecialist,
 }) => {
   const [viewAngle, setViewAngle] = useState<'portrait' | 'fullbody'>('portrait');
-  const [activeSpecialist, setActiveSpecialist] = useState('Odogwu Alpha');
+  const [activeSpecialist, setActiveSpecialist] = useState(profile.specialistId || 'Odogwu Alpha');
 
   if (!isOpen) return null;
 
-  const specialists = [
+  const specialists: SpecialistInfo[] = [
     {
       id: 'Odogwu Alpha',
       role: 'Special Forces Commander',
       callsign: 'ODOGWU-01',
       description: 'Lagos Island Task Force veteran with Crye tactical armor & NVG shroud',
       credReq: 0,
-      image: REALISTIC_PORTRAIT,
+      image: SPECIALIST_ODOGWU,
+      headgear: 'helmet',
+      gender: 'male',
+      perk: '+15% Heavy Ballistic Armor',
+    },
+    {
+      id: 'Captain Amaka',
+      role: 'Rapid Strike Commander',
+      callsign: 'AMAKA-02',
+      description: 'Urban counter-threat operator with tactical braids & quick comms',
+      credReq: 0,
+      image: SPECIALIST_AMAKA,
+      headgear: 'helmet',
+      gender: 'female',
+      perk: '+20% Sprint Endurance & Agility',
+    },
+    {
+      id: 'Sergeant Danladi',
+      role: 'Marina Recon Commando',
+      callsign: 'RECON-04',
+      description: 'Elite commando with dark green beret, tactical sunglasses & throat mic',
+      credReq: 0,
+      image: SPECIALIST_DANLADI,
+      headgear: 'beret',
+      gender: 'male',
+      perk: '+25% Precision ADS Stability',
     },
     {
       id: 'Lagos Vanguard',
-      role: 'Heavy Breacher & Pointman',
+      role: 'Heavy Urban Breacher',
       callsign: 'VANGUARD-07',
       description: 'Frontline heavy armor operative with Stanag pouches and tactical radio',
-      credReq: 150,
-      image: REALISTIC_FULLBODY,
-    },
-    {
-      id: 'Marina Ghost',
-      role: 'Designated Recon Marksman',
-      callsign: 'GHOST-09',
-      description: 'Lekki Tollgate sector surveillance with low-profile ballistic kit',
-      credReq: 300,
-      image: REALISTIC_PORTRAIT,
+      credReq: 0,
+      image: SPECIALIST_VANGUARD,
+      headgear: 'balaclava',
+      gender: 'male',
+      perk: '+20% Recoil Control & Handling',
     },
   ];
+
+  const currentSpec = specialists.find((s) => s.id === activeSpecialist) || specialists[0];
+
+  const handleChooseSpecialist = (s: SpecialistInfo) => {
+    setActiveSpecialist(s.id);
+    soundEngine.playCashEarned();
+    onSelectSpecialist?.(s);
+  };
 
   const outfitOptions = {
     head: [
@@ -94,7 +138,7 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
           {/* Photorealistic Character Portrait / Full-Body Display */}
           <div className="relative my-3 w-56 h-72 rounded-2xl overflow-hidden border-2 border-amber-500/80 shadow-2xl group bg-stone-900">
             <img
-              src={viewAngle === 'portrait' ? REALISTIC_PORTRAIT : REALISTIC_FULLBODY}
+              src={viewAngle === 'portrait' ? currentSpec.image : SPECIALIST_VANGUARD}
               alt="Real Nigerian Tactical Operative"
               className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
               referrerPolicy="no-referrer"
@@ -127,33 +171,32 @@ export const WardrobeModal: React.FC<WardrobeModalProps> = ({
             {/* Faction Callout */}
             <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-stone-950 via-stone-950/80 to-transparent p-2.5 text-center">
               <div className="text-[10px] font-mono font-bold text-amber-400 flex items-center justify-center gap-1">
-                <span>NIGERIAN ARMED FORCES</span>
+                <span>{currentSpec.callsign}</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               </div>
-              <div className="text-[9px] text-stone-400 font-mono">SPEC-OPS DIVISION • LAGOS</div>
+              <div className="text-[9px] text-stone-300 font-mono truncate">{currentSpec.role}</div>
+              <div className="text-[8px] text-emerald-400 font-mono mt-0.5">{currentSpec.perk}</div>
             </div>
           </div>
 
           {/* Specialist Operative Archetypes Selector */}
           <div className="w-full space-y-1.5">
             <span className="text-[10px] font-mono font-bold text-stone-400 uppercase tracking-widest block text-center">
-              OPERATIVE SPECIALIST LOADOUTS
+              OPERATIVE SPECIALISTS
             </span>
-            <div className="grid grid-cols-3 gap-1">
+            <div className="grid grid-cols-2 gap-1.5">
               {specialists.map((s) => (
                 <button
                   key={s.id}
-                  onClick={() => {
-                    setActiveSpecialist(s.id);
-                    soundEngine.playCashEarned();
-                  }}
-                  className={`p-1.5 rounded-lg border text-center transition-all ${
+                  onClick={() => handleChooseSpecialist(s)}
+                  className={`p-1.5 rounded-lg border text-left transition-all ${
                     activeSpecialist === s.id
-                      ? 'bg-amber-500/20 border-amber-500 text-amber-300 font-bold'
+                      ? 'bg-amber-500/25 border-amber-500 text-amber-300 font-bold shadow-md'
                       : 'bg-stone-900/60 border-stone-800 text-stone-400 hover:text-stone-200'
                   }`}
                 >
-                  <div className="text-[9px] font-mono truncate">{s.callsign}</div>
+                  <div className="text-[9px] font-mono font-bold truncate text-amber-400">{s.callsign}</div>
+                  <div className="text-[8px] truncate text-stone-300">{s.role}</div>
                 </button>
               ))}
             </div>

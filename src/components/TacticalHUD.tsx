@@ -177,14 +177,14 @@ export const TacticalHUD: React.FC<TacticalHUDProps> = ({
             title="Click to customize Tactical Operative Gear & Drip"
           >
             <img
-              src="/src/assets/images/realistic_nigerian_operative_1791372075310.jpg"
+              src={profile.avatarUrl || '/src/assets/images/realistic_nigerian_operative_1791372075310.jpg'}
               alt="Realistic Nigerian Tactical Operative Avatar"
               className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition-transform"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/30 to-transparent" />
             <div className="relative p-1 text-center">
-              <span className="text-[8px] font-mono font-bold text-amber-300 block uppercase tracking-wider">
-                DRIP
+              <span className="text-[8px] font-mono font-bold text-amber-300 block uppercase tracking-wider truncate">
+                {profile.alias || 'ODOGWU-01'}
               </span>
             </div>
           </div>

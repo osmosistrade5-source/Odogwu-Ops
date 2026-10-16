@@ -11,7 +11,7 @@ import { soundEngine } from './audio.ts';
 import { PIDGIN_CALLOUTS } from './constants.ts';
 import { RemotePlayerData } from './multiplayer.ts';
 import { LagosCityBuilder } from './cityBuilder.ts';
-import { buildTacticalOperativeMesh, buildFirstPersonTacticalArms } from './characterModels.ts';
+import { buildTacticalOperativeMesh, buildFirstPersonTacticalArms, HeadgearType, OperativeGender } from './characterModels.ts';
 import { LagosCrowdSystem } from './crowdSystem.ts';
 
 // High-fidelity mature visual textures
@@ -97,6 +97,7 @@ export class LagosStreetEngine {
   private animationFrameId: number | null = null;
   private textureLoader = new THREE.TextureLoader();
   private vrButtonElement: HTMLElement | null = null;
+  private playerWalkCycle: number = 0;
 
   constructor(container: HTMLElement, currentWeapon: WeaponDef, callbacks: EngineCallbacks) {
     this.container = container;
@@ -163,6 +164,8 @@ export class LagosStreetEngine {
     dirLight.shadow.camera.top = 150;
     dirLight.shadow.camera.bottom = -150;
     dirLight.shadow.bias = -0.0003;
+    dirLight.shadow.normalBias = 0.02;
+    dirLight.shadow.radius = 2.0;
     this.scene.add(dirLight);
 
     // 3. Subtle azure rim light from ocean
@@ -388,25 +391,66 @@ export class LagosStreetEngine {
       primaryColor: 0x27272a,
       armorColor: 0x3f3f46,
       hasPlumbob: true,
+      headgear: 'helmet',
+      gender: 'male',
     });
     this.plumbobMesh = this.playerCharacterMesh.getObjectByName('plumbob') as THREE.Mesh;
     this.scene.add(this.playerCharacterMesh);
     this.playerCharacterMesh.visible = false;
   }
 
-  // --- MATURE TACTICAL BOTS ---
+  /**
+   * Dynamically update local player operative model (beret, helmet, boonie, balaclava, female)
+   */
+  public updatePlayerOperative(options: {
+    headgear?: HeadgearType;
+    gender?: OperativeGender;
+    skinTone?: number;
+    theme?: 'charcoal' | 'crimson' | 'navy' | 'ankara';
+  }) {
+    const isVisible = this.playerCharacterMesh.visible;
+    const currentPos = this.playerCharacterMesh.position.clone();
+    const currentRot = this.playerCharacterMesh.rotation.y;
+
+    this.scene.remove(this.playerCharacterMesh);
+
+    this.playerCharacterMesh = buildTacticalOperativeMesh({
+      primaryColor: 0x27272a,
+      armorColor: 0x3f3f46,
+      hasPlumbob: true,
+      headgear: options.headgear ?? 'helmet',
+      gender: options.gender ?? 'male',
+      skinTone: options.skinTone,
+      theme: options.theme ?? 'charcoal',
+    });
+
+    this.playerCharacterMesh.position.copy(currentPos);
+    this.playerCharacterMesh.rotation.y = currentRot;
+    this.playerCharacterMesh.visible = isVisible;
+    this.plumbobMesh = this.playerCharacterMesh.getObjectByName('plumbob') as THREE.Mesh;
+    this.scene.add(this.playerCharacterMesh);
+  }
+
+  // --- MATURE TACTICAL BOTS WITH DIVERSE SPECIALIST HEADGEAR ---
   private setupCityBots() {
-    const cityBotConfigs: { name: string; team: 'ENEMY' | 'FRIENDLY'; x: number; z: number }[] = [
-      { name: 'Lekki Toll Syndicate', team: 'ENEMY', x: 50, z: -55 },
-      { name: 'Marina Marksman', team: 'ENEMY', x: 70, z: -70 },
-      { name: 'Balogun Sector Enforcer', team: 'ENEMY', x: -55, z: -50 },
-      { name: 'Idumota Scout Unit', team: 'ENEMY', x: -70, z: -65 },
-      { name: 'Oshodi Flyover Vanguard', team: 'ENEMY', x: -55, z: 55 },
-      { name: 'Interchange Combatant', team: 'ENEMY', x: -40, z: 30 },
-      { name: 'Ikeja Cyber Operative', team: 'ENEMY', x: 55, z: 65 },
-      { name: 'Generator Sector Gunner', team: 'ENEMY', x: 70, z: 50 },
-      { name: 'Tactical Escort Unit Alpha', team: 'FRIENDLY', x: 6, z: 12 },
-      { name: 'Tactical Escort Unit Bravo', team: 'FRIENDLY', x: -8, z: 8 },
+    const cityBotConfigs: {
+      name: string;
+      team: 'ENEMY' | 'FRIENDLY';
+      x: number;
+      z: number;
+      headgear: HeadgearType;
+      gender: OperativeGender;
+    }[] = [
+      { name: 'Lekki Toll Syndicate', team: 'ENEMY', x: 50, z: -55, headgear: 'balaclava', gender: 'male' },
+      { name: 'Marina Marksman', team: 'ENEMY', x: 70, z: -70, headgear: 'boonie', gender: 'male' },
+      { name: 'Balogun Sector Enforcer', team: 'ENEMY', x: -55, z: -50, headgear: 'helmet', gender: 'male' },
+      { name: 'Idumota Scout Unit', team: 'ENEMY', x: -70, z: -65, headgear: 'balaclava', gender: 'female' },
+      { name: 'Oshodi Flyover Vanguard', team: 'ENEMY', x: -55, z: 55, headgear: 'helmet', gender: 'male' },
+      { name: 'Interchange Combatant', team: 'ENEMY', x: -40, z: 30, headgear: 'boonie', gender: 'male' },
+      { name: 'Ikeja Cyber Operative', team: 'ENEMY', x: 55, z: 65, headgear: 'balaclava', gender: 'female' },
+      { name: 'Generator Sector Gunner', team: 'ENEMY', x: 70, z: 50, headgear: 'helmet', gender: 'male' },
+      { name: 'Tactical Escort Unit Alpha', team: 'FRIENDLY', x: 6, z: 12, headgear: 'beret', gender: 'male' },
+      { name: 'Tactical Escort Unit Bravo', team: 'FRIENDLY', x: -8, z: 8, headgear: 'beret', gender: 'female' },
     ];
 
     cityBotConfigs.forEach((cfg, idx) => {
@@ -429,6 +473,8 @@ export class LagosStreetEngine {
         primaryColor: cfg.team === 'ENEMY' ? 0x18181b : 0x1e293b,
         armorColor: cfg.team === 'ENEMY' ? 0x7f1d1d : 0x0369a1,
         isHostile: cfg.team === 'ENEMY',
+        headgear: cfg.headgear,
+        gender: cfg.gender,
       });
       mesh.position.set(cfg.x, 0, cfg.z);
       this.botMeshes.set(bot.id, mesh);
@@ -978,9 +1024,10 @@ export class LagosStreetEngine {
 
       this.camera.position.copy(this.playerPosition);
     } else {
-      // SIMS MODE
+      let isMovingSims = false;
       const moveVec = new THREE.Vector3(right, 0, -fwd);
       if (moveVec.lengthSq() > 0.0001) {
+        isMovingSims = true;
         moveVec.normalize().multiplyScalar(speed * delta);
         this.playerPosition.add(moveVec);
         this.playerCharacterMesh.rotation.y = Math.atan2(right, -fwd);
@@ -992,12 +1039,47 @@ export class LagosStreetEngine {
         const dist = diff.length();
 
         if (dist > 0.4) {
+          isMovingSims = true;
           diff.normalize().multiplyScalar(Math.min(dist, speed * delta));
           this.playerPosition.add(diff);
           this.playerCharacterMesh.rotation.y = Math.atan2(diff.x, diff.z);
         } else {
           this.navTarget = null;
           if (this.navMarkerMesh) this.navMarkerMesh.visible = false;
+        }
+      }
+
+      // Animate Player Character Walk Cycle in Sims 3rd-Person
+      const legL = this.playerCharacterMesh.getObjectByName('legL');
+      const legR = this.playerCharacterMesh.getObjectByName('legR');
+      const armL = this.playerCharacterMesh.getObjectByName('armL');
+      const armR = this.playerCharacterMesh.getObjectByName('armR');
+      const torso = this.playerCharacterMesh.getObjectByName('torso');
+
+      if (isMovingSims) {
+        this.playerWalkCycle += delta * (this.isSprinting ? 14 : 9);
+        if (legL && legR) {
+          legL.rotation.x = Math.sin(this.playerWalkCycle) * 0.65;
+          legR.rotation.x = -Math.sin(this.playerWalkCycle) * 0.65;
+        }
+        if (armL && armR) {
+          armL.rotation.x = -Math.sin(this.playerWalkCycle) * 0.45;
+          armR.rotation.x = Math.sin(this.playerWalkCycle) * 0.35;
+        }
+        if (torso) {
+          torso.position.y = 1.15 + Math.abs(Math.sin(this.playerWalkCycle * 2)) * 0.04;
+        }
+      } else {
+        if (legL && legR) {
+          legL.rotation.x = THREE.MathUtils.lerp(legL.rotation.x, 0, 0.2);
+          legR.rotation.x = THREE.MathUtils.lerp(legR.rotation.x, 0, 0.2);
+        }
+        if (armL && armR) {
+          armL.rotation.x = THREE.MathUtils.lerp(armL.rotation.x, 0, 0.2);
+          armR.rotation.x = THREE.MathUtils.lerp(armR.rotation.x, 0, 0.2);
+        }
+        if (torso) {
+          torso.position.y = 1.15;
         }
       }
 
@@ -1082,6 +1164,20 @@ export class LagosStreetEngine {
           mesh.position.add(dir.multiplyScalar(delta * 2.2));
           mesh.lookAt(this.playerPosition.x, 0, this.playerPosition.z);
         }
+      }
+
+      // Animate Bot Leg Walk Cycle
+      const botLegL = mesh.getObjectByName('legL');
+      const botLegR = mesh.getObjectByName('legR');
+      const isBotMoving = (bot.team === 'ENEMY' && distToPlayer < 48 && distToPlayer > 14) || (bot.team !== 'ENEMY' && distToPlayer > 20);
+
+      if (isBotMoving && botLegL && botLegR) {
+        const cycle = ((now / 180) + Number(bot.id.replace(/\D/g, ''))) % (Math.PI * 2);
+        botLegL.rotation.x = Math.sin(cycle) * 0.55;
+        botLegR.rotation.x = -Math.sin(cycle) * 0.55;
+      } else if (botLegL && botLegR) {
+        botLegL.rotation.x = THREE.MathUtils.lerp(botLegL.rotation.x, 0, 0.2);
+        botLegR.rotation.x = THREE.MathUtils.lerp(botLegR.rotation.x, 0, 0.2);
       }
     });
   }
